@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ShadowLogs iPhone Store</title>
+  <!-- Adding Google Fonts for fancy typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;500;700;900&family=Pacifico&family=Righteous&display=swap" rel="stylesheet">
   <style>
     body {
       background-image: url('https://i.pinimg.com/474x/21/d1/c8/21d1c8d4e5ebbf8fef56adf44869931b.jpg');
@@ -14,6 +18,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 0;
+      overflow-x: hidden;
     }
     .shake-blink {
       animation: shake 0.5s infinite alternate, blink 1.5s step-start infinite;
@@ -48,6 +53,63 @@
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
+    }
+    /* Text glow effect for nav items */
+    .nav-text-glow {
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.3);
+      transition: text-shadow 0.3s ease;
+    }
+    .nav-text-glow:hover {
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3);
+    }
+    /* Gradient text effect */
+    .gradient-text {
+      background: linear-gradient(90deg, #ff8a00, #e52e71);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-fill-color: transparent;
+    }
+    /* Fancy nav styles */
+    .nav-item {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      padding: 0.5rem 0;
+      position: relative;
+    }
+    .nav-item:hover {
+      transform: translateX(5px);
+    }
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #ff8a00, #e52e71);
+      transition: width 0.3s ease;
+    }
+    .nav-item:hover::after {
+      width: 100%;
+    }
+    /* Special styling for Order Now */
+    .special-nav-item {
+      font-family: 'Righteous', cursive;
+      text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
+    }
+    /* Dashboard title */
+    .dashboard-title {
+      font-family: 'Audiowide', cursive;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #00dbde, #fc00ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-fill-color: transparent;
     }
     .error-message {
       color: red;
@@ -104,6 +166,7 @@
       cursor: pointer;
       border-radius: 0.25rem;
       margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
     }
     .tab-button.active {
       background-color: #3b82f6;
@@ -196,8 +259,14 @@
     .flex {
       display: flex;
     }
+    .flex-col {
+      flex-direction: column;
+    }
     .justify-center {
       justify-content: center;
+    }
+    .justify-between {
+      justify-content: space-between;
     }
     .space-x-4 > * + * {
       margin-left: 1rem;
@@ -378,6 +447,7 @@
     }
     .active-section {
       color: #fcd34d;
+      text-shadow: 0 0 10px rgba(252, 211, 77, 0.7), 0 0 20px rgba(252, 211, 77, 0.5);
     }
     .gap-2 {
       gap: 0.5rem;
@@ -385,11 +455,144 @@
     .items-center {
       align-items: center;
     }
+    
+    /* Mobile menu styles */
+    .mobile-menu-button {
+      display: none;
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 50;
+      background-color: rgba(31, 41, 55, 0.9);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem;
+      cursor: pointer;
+      font-size: 1.5rem;
+      width: 3rem;
+      height: 3rem;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      .mobile-menu-button {
+        display: flex;
+      }
+      
+      #store-section {
+        flex-direction: column;
+      }
+      
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 80%;
+        height: 100%;
+        z-index: 40;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      
+      .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 30;
+        display: none;
+      }
+      
+      .sidebar-overlay.open {
+        display: block;
+      }
+      
+      main {
+        width: 100%;
+        padding: 1rem;
+      }
+      
+      .p-8 {
+        padding: 1rem;
+      }
+      
+      .product-grid {
+        max-height: none;
+      }
+      
+      .tab-button {
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+      }
+      
+      .flex-wrap {
+        flex-wrap: wrap;
+      }
+      
+      .signup-section {
+        padding: 1.5rem;
+        margin-top: 1rem;
+        width: 90%;
+      }
+      
+      .profile-avatar {
+        width: 6rem;
+        height: 6rem;
+        font-size: 1.75rem;
+      }
+      
+      .text-3xl {
+        font-size: 1.5rem;
+      }
+      
+      .text-2xl {
+        font-size: 1.25rem;
+      }
+      
+      .text-xl {
+        font-size: 1.125rem;
+      }
+    }
+    
+    /* Small mobile devices */
+    @media (max-width: 480px) {
+      .signup-section {
+        width: 95%;
+        padding: 1rem;
+      }
+      
+      .space-x-4 > * + * {
+        margin-left: 0.5rem;
+      }
+      
+      .px-4 {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+      
+      .py-2 {
+        padding-top: 0.375rem;
+        padding-bottom: 0.375rem;
+      }
+      
+      .product-image {
+        height: 150px;
+      }
+    }
   </style>
 </head>
 <body class="min-h-screen">
   <!-- Login/Signup Section -->
-  <div id="signup-section" class="relative w-full max-w-md mx-auto p-8 rounded-xl shadow mt-10 content-bg">
+  <div id="signup-section" class="relative w-full max-w-md mx-auto p-8 rounded-xl shadow mt-10 content-bg signup-section">
     <div class="absolute inset-0 -z-10 rounded-xl glow-border"></div>
     <h2 class="text-2xl font-bold text-center">Welcome to ShadowLogs</h2>
     <div class="flex justify-center space-x-4 my-4">
@@ -444,43 +647,55 @@
     </form>
   </div>
 
+  <!-- Mobile Menu Button -->
+  <button id="mobile-menu-button" class="mobile-menu-button" onclick="toggleMobileMenu()">
+    ☰
+  </button>
+
   <!-- Dashboard Section (Hidden Initially) -->
   <div id="store-section" class="w-full h-screen flex hidden">
-    <aside class="w-1/4 sidebar-bg text-white p-6 space-y-6">
-      <h2 class="text-2xl font-bold">Dashboard</h2>
+    <!-- Sidebar Overlay (Mobile) -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleMobileMenu()"></div>
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-1/4 sidebar-bg text-white p-6 space-y-6 sidebar">
+      <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold dashboard-title">Dashboard</h2>
+        <button class="text-white text-xl mobile-menu-button" onclick="toggleMobileMenu()">✕</button>
+      </div>
       <ul class="space-y-4">
         <li>
-          <a href="#" id="nav-products" onclick="showProducts()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 active-section">
+          <a href="#" id="nav-products" onclick="showProducts(); closeMobileMenuIfOpen();" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 active-section nav-item nav-text-glow">
             <span>Home</span>
           </a>
         </li>
         <li>
-          <a href="#" id="nav-orders" onclick="showOrders()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300">
+          <a href="#" id="nav-orders" onclick="showOrders(); closeMobileMenuIfOpen();" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 nav-item nav-text-glow">
             <span>Orders</span>
           </a>
         </li>
         <li>
-          <a href="#" id="nav-order-form" onclick="showOrderForm()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 font-bold text-pink-300 shake-blink">
+          <a href="#" id="nav-order-form" onclick="showOrderForm(); closeMobileMenuIfOpen();" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 font-bold special-nav-item shake-blink">
             <span>Order Now</span>
           </a>
         </li>
         <li>
-          <a href="#" id="nav-profile" onclick="showProfile()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300">
+          <a href="#" id="nav-profile" onclick="showProfile(); closeMobileMenuIfOpen();" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 nav-item nav-text-glow">
             <span>Profile</span>
           </a>
         </li>
         <li>
-          <a href="#" id="nav-account" onclick="showAccountManagement()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300">
+          <a href="#" id="nav-account" onclick="showAccountManagement(); closeMobileMenuIfOpen();" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 nav-item nav-text-glow">
             <span>Account Management</span>
           </a>
         </li>
         <li>
-          <a href="#" id="nav-settings" onclick="showSettings()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300">
+          <a href="#" id="nav-settings" onclick="showSettings(); closeMobileMenuIfOpen();" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 nav-item nav-text-glow">
             <span>Settings</span>
           </a>
         </li>
         <li>
-          <a href="#" onclick="handleLogout()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300">
+          <a href="#" onclick="handleLogout()" class="flex items-center gap-2 w-full text-left hover:text-yellow-300 nav-item gradient-text">
             <span>Logout</span>
           </a>
         </li>
@@ -648,7 +863,7 @@
       <section id="profile-section" class="hidden">
         <h1 class="text-3xl font-bold mb-6">Your Profile</h1>
         
-        <div class="grid gap-6 md:grid-cols-2">
+        <div class="grid gap-6 md:grid-cols-2 grid-cols-1">
           <div class="bg-gray-50 p-6 rounded-lg shadow-md">
             <h2 class="text-xl font-semibold mb-4">Profile Information</h2>
             <div id="profile-view" class="space-y-4">
@@ -710,13 +925,13 @@
         <h1 class="text-3xl font-bold mb-6">Account Management</h1>
         
         <div class="mb-4">
-          <div class="flex mb-4">
+          <div class="flex mb-4 flex-wrap">
             <button id="addresses-tab" class="tab-button active" onclick="switchTab('addresses')">Shipping Addresses</button>
             <button id="payments-tab" class="tab-button" onclick="switchTab('payments')">Payment Methods</button>
           </div>
           
           <div id="addresses-content" class="tab-content active">
-            <div class="grid gap-6 md:grid-cols-2">
+            <div class="grid gap-6 md:grid-cols-2 grid-cols-1">
               <div class="bg-gray-50 p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Your Addresses</h2>
                 <div id="addresses-list" class="space-y-4">
@@ -768,7 +983,7 @@
           </div>
           
           <div id="payments-content" class="tab-content">
-            <div class="grid gap-6 md:grid-cols-2">
+            <div class="grid gap-6 md:grid-cols-2 grid-cols-1">
               <div class="bg-gray-50 p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Your Payment Methods</h2>
                 <div id="payments-list" class="space-y-4">
@@ -861,6 +1076,29 @@
         }
       ]
     };
+
+    // Mobile menu functions
+    function toggleMobileMenu() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+      
+      // Prevent scrolling when menu is open
+      document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+    }
+    
+    function closeMobileMenuIfOpen() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    }
 
     // Login/Signup Functions
     function switchForm(showSignup) {
@@ -1422,6 +1660,28 @@
         messageElement.classList.add('hidden');
       }, 3000);
     }
+    
+    // Check for mobile devices and adjust layout on resize
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        
+        if (sidebar.classList.contains('open')) {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      }
+    });
+    
+    // Initialize mobile menu state
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.innerWidth <= 768) {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.remove('open');
+      }
+    });
   </script>
 </body>
 </html>
