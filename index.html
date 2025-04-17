@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShadowLogs iPhone Store</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-image: url('https://i.pinimg.com/474x/21/d1/c8/21d1c8d4e5ebbf8fef56adf44869931b.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+    }
+    .shake-blink {
+      animation: shake 0.5s infinite alternate, blink 1.5s step-start infinite;
+    }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      50% { transform: translateX(-5px); }
+      100% { transform: translateX(5px); }
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .glow-border {
+      position: relative;
+      z-index: 0;
+    }
+    .glow-border::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+      background: linear-gradient(45deg, #00f, #0ff, #0f0, #ff0, #f00, #f0f, #00f);
+      background-size: 400% 400%;
+      animation: glow-rotate 6s linear infinite;
+      border-radius: 1rem;
+      z-index: -1;
+      filter: blur(8px);
+    }
+    @keyframes glow-rotate {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .error-message {
+      color: red;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    .success-message {
+      color: green;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+    .product-grid {
+      max-height: 70vh;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    .product-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+    .product-grid::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    .product-grid::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 10px;
+    }
+    .product-grid::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    .product-image {
+      height: 200px;
+      object-fit: contain;
+      width: 100%;
+    }
+    .content-bg {
+      background-color: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(5px);
+    }
+    .sidebar-bg {
+      background-color: rgba(31, 41, 55, 0.9);
+      backdrop-filter: blur(5px);
+    }
+  </style>
+  <script>
+    function switchForm(showSignup) {
+      document.getElementById('signup-form').classList.toggle('hidden', !showSignup);
+      document.getElementById('login-form').classList.toggle('hidden', showSignup);
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+    }
+
+    function validateEmailOrPhone(input) {
+      const value = input.value.trim();
+      const errorElement = input.nextElementSibling;
+      
+      if (value.startsWith('+')) {
+        if (!/^\+[0-9]+$/.test(value)) {
+          errorElement.textContent = 'Phone number must contain only numbers after +';
+          return false;
+        }
+        if (value.length < 8 || value.length > 15) {
+          errorElement.textContent = 'Phone number must be between 8-15 digits including +';
+          return false;
+        }
+      } else {
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)) {
+          errorElement.textContent = 'Please enter a valid email address';
+          return false;
+        }
+      }
+      
+      errorElement.textContent = '';
+      return true;
+    }
+
+    function validatePassword(input, isConfirmation = false) {
+      const value = input.value;
+      const errorElement = input.nextElementSibling;
+      
+      if (value.length < 6) {
+        errorElement.textContent = 'Password must be at least 6 characters long';
+        return false;
+      }
+      
+      if (isConfirmation) {
+        const password = isConfirmation === true ? 
+          document.getElementById('password').value : 
+          document.getElementById('new-password').value;
+        if (value !== password) {
+          errorElement.textContent = 'Passwords do not match!';
+          return false;
+        }
+      }
+      
+      errorElement.textContent = '';
+      return true;
+    }
+
+    function handleSignup(event) {
+      event.preventDefault();
+      const email = document.getElementById('email');
+      const password = document.getElementById('password');
+      const confirmPassword = document.getElementById('confirm-password');
+
+      const isEmailValid = validateEmailOrPhone(email);
+      const isPasswordValid = validatePassword(password);
+      const isConfirmValid = validatePassword(confirmPassword, true);
+
+      if (!isEmailValid || !isPasswordValid || !isConfirmValid) return;
+
+      document.getElementById('signup-section').classList.add('hidden');
+      document.getElementById('store-section').classList.remove('hidden');
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const loginEmail = document.getElementById('login-email');
+      const loginPassword = document.getElementById('login-password');
+
+      const isEmailValid = validateEmailOrPhone(loginEmail);
+      const isPasswordValid = validatePassword(loginPassword);
+
+      if (!isEmailValid || !isPasswordValid) return;
+
+      document.getElementById('signup-section').classList.add('hidden');
+      document.getElementById('store-section').classList.remove('hidden');
+    }
+
+    function showOrders() {
+      document.getElementById('orders-section').classList.remove('hidden');
+      document.getElementById('products-section').classList.add('hidden');
+      document.getElementById('order-form-section').classList.add('hidden');
+      document.getElementById('settings-section').classList.add('hidden');
+    }
+
+    function showProducts() {
+      document.getElementById('orders-section').classList.add('hidden');
+      document.getElementById('products-section').classList.remove('hidden');
+      document.getElementById('order-form-section').classList.add('hidden');
+      document.getElementById('settings-section').classList.add('hidden');
+    }
+
+    function showOrderForm() {
+      document.getElementById('orders-section').classList.add('hidden');
+      document.getElementById('products-section').classList.add('hidden');
+      document.getElementById('order-form-section').classList.remove('hidden');
+      document.getElementById('settings-section').classList.add('hidden');
+    }
+
+    function showSettings() {
+      document.getElementById('orders-section').classList.add('hidden');
+      document.getElementById('products-section').classList.add('hidden');
+      document.getElementById('order-form-section').classList.add('hidden');
+      document.getElementById('settings-section').classList.remove('hidden');
+    }
+
+    function handlePasswordChange(event) {
+      event.preventDefault();
+      const newPassword = document.getElementById('new-password');
+      const confirmPassword = document.getElementById('confirm-new-password');
+      const messageElement = document.getElementById('password-change-message');
+
+      const isNewValid = validatePassword(newPassword);
+      const isConfirmValid = validatePassword(confirmPassword, 'new');
+
+      if (!isNewValid || !isConfirmValid) {
+        messageElement.textContent = '';
+        return;
+      }
+
+      const shouldChange = confirm('Are you sure you want to change your password?');
+      
+      if (shouldChange) {
+        messageElement.textContent = 'Password changed successfully!';
+        messageElement.className = 'success-message';
+        
+        newPassword.value = '';
+        confirmPassword.value = '';
+        
+        setTimeout(() => {
+          messageElement.textContent = '';
+        }, 3000);
+      } else {
+        messageElement.textContent = 'Password change cancelled';
+        messageElement.className = 'error-message';
+        
+        setTimeout(() => {
+          messageElement.textContent = '';
+        }, 3000);
+      }
+    }
+
+    function handleLogout() {
+      document.getElementById('store-section').classList.add('hidden');
+      document.getElementById('signup-section').classList.remove('hidden');
+      
+      document.getElementById('signup-form').reset();
+      document.getElementById('login-form').reset();
+      
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+      
+      document.getElementById('signup-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+      
+      showProducts();
+    }
+  </script>
+</head>
+<body class="min-h-screen">
+  <div id="signup-section" class="glow-border w-full max-w-md mx-auto content-bg p-8 rounded-xl shadow space-y-6 mt-10">
+    <h2 class="text-2xl font-bold text-center">Welcome to ShadowLogs</h2>
+    <div class="flex justify-center space-x-4 mb-4">
+      <button onclick="switchForm(true)" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Sign Up</button>
+      <button onclick="switchForm(false)" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Login</button>
+    </div>
+
+    <form id="signup-form" onsubmit="handleSignup(event)" class="space-y-4 hidden">
+      <div>
+        <label class="block mb-1">Email or Phone Number</label>
+        <input type="text" id="email" class="w-full border border-gray-300 p-2 rounded" required 
+               onblur="validateEmailOrPhone(this)" />
+        <div class="error-message"></div>
+      </div>
+      <div>
+        <label class="block mb-1">Password (min 6 characters)</label>
+        <input type="password" id="password" class="w-full border border-gray-300 p-2 rounded" required 
+               onblur="validatePassword(this)" />
+        <div class="error-message"></div>
+      </div>
+      <div>
+        <label class="block mb-1">Confirm Password</label>
+        <input type="password" id="confirm-password" class="w-full border border-gray-300 p-2 rounded" required 
+               onblur="validatePassword(this, true)" />
+        <div class="error-message"></div>
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Sign Up</button>
+    </form>
+
+    <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+      <div>
+        <label class="block mb-1">Email or Phone Number</label>
+        <input type="text" id="login-email" class="w-full border border-gray-300 p-2 rounded" required 
+               onblur="validateEmailOrPhone(this)" />
+        <div class="error-message"></div>
+        <p class="text-xs text-gray-500 mt-1">
+          Email format: user@example.com<br>
+          Phone format: +1234567890 (must start with +)
+        </p>
+      </div>
+      <div>
+        <label class="block mb-1">Password (min 6 characters)</label>
+        <input type="password" id="login-password" class="w-full border border-gray-300 p-2 rounded" required 
+               onblur="validatePassword(this)" />
+        <div class="error-message"></div>
+      </div>
+      <button type="submit" class="w-full bg-gray-700 text-white py-2 rounded hover:bg-gray-800">Login</button>
+    </form>
+  </div>
+
+  <div id="store-section" class="w-full h-screen flex hidden">
+    <aside class="w-1/4 sidebar-bg text-white p-6 space-y-6">
+      <h2 class="text-2xl font-bold">Dashboard</h2>
+      <ul class="space-y-4">
+        <li><a href="#" onclick="showProducts()" class="hover:text-yellow-300">Home</a></li>
+        <li><a href="#" onclick="showOrders()" class="hover:text-yellow-300">Orders</a></li>
+        <li><a href="#" onclick="showOrderForm()" class="hover:text-yellow-300 font-bold text-pink-300 shake-blink">Order Now</a></li>
+        <li><a href="#" onclick="showSettings()" class="hover:text-yellow-300">Settings</a></li>
+        <li><a href="#" onclick="handleLogout()" class="hover:text-yellow-300">Logout</a></li>
+      </ul>
+    </aside>
+
+    <main class="flex-1 content-bg p-8 overflow-y-auto">
+      <section id="products-section">
+        <h1 class="text-3xl font-bold mb-6">iPhone Collection</h1>
+        <div class="product-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <!-- iPhone 15 Series -->
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1693009279096" alt="iPhone 15 Pro Max" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 15 Pro Max</h2>
+            <p class="text-gray-600">From $1099</p>
+            <p class="text-sm text-gray-500">6.7" Super Retina XDR, A17 Pro, Titanium</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-blue?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1693009278906" alt="iPhone 15 Pro" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 15 Pro</h2>
+            <p class="text-gray-600">From $999</p>
+            <p class="text-sm text-gray-500">6.1" Super Retina XDR, A17 Pro, Titanium</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-finish-select-202309-6-1inch-pink?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1692927223578" alt="iPhone 15" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 15</h2>
+            <p class="text-gray-600">From $799</p>
+            <p class="text-sm text-gray-500">6.1" Super Retina XDR, A16 Bionic, Color-infused glass</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-plus-finish-select-202309-6-1inch-blue?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1692927223578" alt="iPhone 15 Plus" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 15 Plus</h2>
+            <p class="text-gray-600">From $899</p>
+            <p class="text-sm text-gray-500">6.7" Super Retina XDR, A16 Bionic, Color-infused glass</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+
+          <!-- iPhone 14 Series -->
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-14-pro-finish-select-202209-6-7inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1663703841896" alt="iPhone 14 Pro Max" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 14 Pro Max</h2>
+            <p class="text-gray-600">From $1099</p>
+            <p class="text-sm text-gray-500">6.7" Super Retina XDR, A16 Bionic, Dynamic Island</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-14-pro-finish-select-202209-6-1inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1663703841896" alt="iPhone 14 Pro" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 14 Pro</h2>
+            <p class="text-gray-600">From $999</p>
+            <p class="text-sm text-gray-500">6.1" Super Retina XDR, A16 Bionic, Dynamic Island</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-14-finish-select-202209-6-1inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1661027202348" alt="iPhone 14" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 14</h2>
+            <p class="text-gray-600">From $799</p>
+            <p class="text-sm text-gray-500">6.1" Super Retina XDR, A15 Bionic, Ceramic Shield</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-14-plus-finish-select-202209-6-1inch?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1661027202348" alt="iPhone 14 Plus" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 14 Plus</h2>
+            <p class="text-gray-600">From $899</p>
+            <p class="text-sm text-gray-500">6.7" Super Retina XDR, A15 Bionic, Ceramic Shield</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+
+          <!-- iPhone 13 Series -->
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-pro-max-silver-select?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1631652956000" alt="iPhone 13 Pro Max" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 13 Pro Max</h2>
+            <p class="text-gray-600">From $1099</p>
+            <p class="text-sm text-gray-500">6.7" Super Retina XDR, A15 Bionic, ProMotion</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-pro-graphite-select?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1631652956000" alt="iPhone 13 Pro" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 13 Pro</h2>
+            <p class="text-gray-600">From $999</p>
+            <p class="text-sm text-gray-500">6.1" Super Retina XDR, A15 Bionic, ProMotion</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-starlight-select-2021?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1629907845000" alt="iPhone 13" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 13</h2>
+            <p class="text-gray-600">From $699</p>
+            <p class="text-sm text-gray-500">6.1" Super Retina XDR, A15 Bionic, Ceramic Shield</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-mini-blue-select-2021?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1629907845000" alt="iPhone 13 mini" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 13 mini</h2>
+            <p class="text-gray-600">From $599</p>
+            <p class="text-sm text-gray-500">5.4" Super Retina XDR, A15 Bionic, Compact size</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+
+          <!-- iPhone SE and Older Models -->
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-se-product-red-select-2022?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1644989934997" alt="iPhone SE (2022)" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone SE (2022)</h2>
+            <p class="text-gray-600">From $429</p>
+            <p class="text-sm text-gray-500">4.7" Retina HD, A15 Bionic, Touch ID</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-12-purple-select-2021?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1617130317000" alt="iPhone 12" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 12</h2>
+            <p class="text-gray-600">From $599</p>
+            <p class="text-sm text-gray-500">6.1" Super Retina XDR, A14 Bionic, Ceramic Shield</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone11-purple-select-2019?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1566960958082" alt="iPhone 11" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone 11</h2>
+            <p class="text-gray-600">From $499</p>
+            <p class="text-sm text-gray-500">6.1" Liquid Retina HD, A13 Bionic, Dual-camera</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+          
+          <div class="bg-gray-100 rounded-xl shadow p-4">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-xs-max-gold-select-2018?wid=5120&hei=2880&fmt=p-jpg&qlt=80&.v=1550795409154" alt="iPhone XS Max" class="product-image rounded-lg mb-4">
+            <h2 class="text-xl font-semibold">iPhone XS Max</h2>
+            <p class="text-gray-600">From $499</p>
+            <p class="text-sm text-gray-500">6.5" Super Retina HD, A12 Bionic, Face ID</p>
+            <button class="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buy Now</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="orders-section" class="hidden">
+        <h1 class="text-3xl font-bold mb-6">Your Orders</h1>
+        <div class="space-y-4">
+          <div class="p-4 border rounded shadow-md bg-green-50">
+            <p><strong>Order ID:</strong> 82347</p>
+            <p><strong>Item:</strong> iPhone 15 Pro Max</p>
+            <p><strong>Status:</strong> <span class="text-green-600 font-semibold">Shipped</span></p>
+          </div>
+          <div class="p-4 border rounded shadow-md bg-yellow-50">
+            <p><strong>Order ID:</strong> 73455</p>
+            <p><strong>Item:</strong> iPhone 14</p>
+            <p><strong>Status:</strong> <span class="text-yellow-600 font-semibold">In Transit</span></p>
+          </div>
+          <div class="p-4 border rounded shadow-md bg-blue-50">
+            <p><strong>Order ID:</strong> 91834</p>
+            <p><strong>Item:</strong> iPhone 13 Pro Max</p>
+            <p><strong>Status:</strong> <span class="text-blue-600 font-semibold">Dispatched</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section id="order-form-section" class="hidden">
+        <h1 class="text-3xl font-bold mb-6">Place a New Order</h1>
+        <form class="space-y-4">
+          <div>
+            <label class="block mb-1">Select iPhone Model</label>
+            <select class="w-full border border-gray-300 p-2 rounded" required>
+              <option disabled selected>Select a model</option>
+              <option>iPhone 15 Pro Max</option>
+              <option>iPhone 15 Pro</option>
+              <option>iPhone 15</option>
+              <option>iPhone 15 Plus</option>
+              <option>iPhone 14 Pro Max</option>
+              <option>iPhone 14 Pro</option>
+              <option>iPhone 14</option>
+              <option>iPhone 14 Plus</option>
+              <option>iPhone 13 Pro Max</option>
+              <option>iPhone 13 Pro</option>
+              <option>iPhone 13</option>
+              <option>iPhone 13 mini</option>
+              <option>iPhone SE (2022)</option>
+              <option>iPhone 12</option>
+              <option>iPhone 11</option>
+              <option>iPhone XS Max</option>
+            </select>
+          </div>
+          <div>
+            <label class="block mb-1">Select Payment Method</label>
+            <select class="w-full border border-gray-300 p-2 rounded">
+              <option>Visa</option>
+              <option>MasterCard</option>
+              <option>PayPal</option>
+              <option>Safaricom</option>
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Proceed to Pay</button>
+        </form>
+      </section>
+
+      <section id="settings-section" class="hidden">
+        <h1 class="text-3xl font-bold mb-6">Account Settings</h1>
+        
+        <div class="bg-gray-50 p-6 rounded-lg shadow-md max-w-md">
+          <h2 class="text-xl font-semibold mb-4">Change Password</h2>
+          <form onsubmit="handlePasswordChange(event)" class="space-y-4">
+            <div>
+              <label class="block mb-1">New Password (min 6 characters)</label>
+              <input type="password" id="new-password" class="w-full border border-gray-300 p-2 rounded" required 
+                     onblur="validatePassword(this)" />
+              <div class="error-message"></div>
+            </div>
+            <div>
+              <label class="block mb-1">Confirm New Password</label>
+              <input type="password" id="confirm-new-password" class="w-full border border-gray-300 p-2 rounded" required 
+                     onblur="validatePassword(this, 'new')" />
+              <div class="error-message"></div>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+              Change Password
+            </button>
+            <div id="password-change-message" class="mt-2"></div>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
