@@ -238,6 +238,27 @@
       }
     }
 
+    function handlePayment(event) {
+      event.preventDefault();
+      const modelSelect = document.querySelector('#order-form-section select:first-of-type');
+      const paymentSelect = document.querySelector('#order-form-section select:last-of-type');
+      
+      if (!modelSelect.value || modelSelect.value === 'Select a model') {
+        alert('Please select an iPhone model');
+        return;
+      }
+      
+      const confirmation = confirm(`Confirm payment for ${modelSelect.value} via ${paymentSelect.value}?`);
+      
+      if (confirmation) {
+        alert('Payment processed successfully! Your order has been placed.');
+        // Here you would typically send the order to your backend
+        showOrders();
+      } else {
+        alert('Payment was cancelled');
+      }
+    }
+
     function handleLogout() {
       document.getElementById('store-section').classList.add('hidden');
       document.getElementById('signup-section').classList.remove('hidden');
@@ -478,7 +499,7 @@
 
       <section id="order-form-section" class="hidden">
         <h1 class="text-3xl font-bold mb-6">Place a New Order</h1>
-        <form class="space-y-4">
+        <form onsubmit="handlePayment(event)" class="space-y-4">
           <div>
             <label class="block mb-1">Select iPhone Model</label>
             <select class="w-full border border-gray-300 p-2 rounded" required>
